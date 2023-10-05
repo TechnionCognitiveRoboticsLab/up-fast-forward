@@ -493,6 +493,10 @@ int main( int argc, char *argv[] )
   /* same for fct file 
    */
   char fct_file[MAX_LENGTH] = "";
+  /* output plan filename
+   */
+  char plan_file[MAX_LENGTH] = "";
+
   
   struct tms start, end;
 
@@ -532,6 +536,7 @@ int main( int argc, char *argv[] )
    */
   sprintf(ops_file, "%s%s", gcmd_line.path, gcmd_line.ops_file_name);
   sprintf(fct_file, "%s%s", gcmd_line.path, gcmd_line.fct_file_name);
+  sprintf(plan_file, "%s%s", gcmd_line.path, gcmd_line.plan_file_name);
 
 
   /* parse the input files
@@ -765,9 +770,9 @@ void output_planner_info( void )
 
   printf("\n\n");
 
-  exit( 0 );
-
   print_official_result();
+
+  exit( 0 );
 
 }
 
@@ -781,16 +786,16 @@ void print_official_result( void )
   int i;
   char name[MAX_LENGTH];
 
-  sprintf( name, "%s.soln", gcmd_line.fct_file_name );
+  sprintf( name, "%s", gcmd_line.plan_file_name );
 
   if ( (out = fopen( name, "w")) == NULL ) {
-    printf("\n\nCan't open official output file!\n\n");
+    printf("\n\nCan't open official output file: |%s|\n\n", gcmd_line.plan_file_name);
     return;
   }
 
   times( &lend );
-  fprintf(out, "Time %d\n", 
-	 (int) ((lend.tms_utime - lstart.tms_utime + lend.tms_stime - lstart.tms_stime) * 10.0));
+  // fprintf(out, "Time %d\n", 
+	//  (int) ((lend.tms_utime - lstart.tms_utime + lend.tms_stime - lstart.tms_stime) * 10.0));
 
   for ( i = 0; i < gnum_plan_ops; i++ ) {
     print_official_op_name( gplan_ops[i] );
@@ -832,7 +837,8 @@ void ff_usage( void )
   printf("\nOPTIONS   DESCRIPTIONS\n\n");
   printf("-p <str>    path for operator and fact file\n");
   printf("-o <str>    operator file name\n");
-  printf("-f <str>    fact file name\n\n");
+  printf("-f <str>    fact file name\n");
+  printf("-q <str>    output plan file name\n\n");
   printf("-i <num>    run-time information level( preset: 1 )\n");
   printf("      0     only times\n");
   printf("      1     problem name, planning process infos\n");
@@ -893,6 +899,7 @@ Bool process_command_line( int argc, char *argv[] )
   
   memset(gcmd_line.ops_file_name, 0, MAX_LENGTH);
   memset(gcmd_line.fct_file_name, 0, MAX_LENGTH);
+  memset(gcmd_line.plan_file_name, 0, MAX_LENGTH);
   memset(gcmd_line.path, 0, MAX_LENGTH);
 
   while ( --argc && ++argv ) {
@@ -913,6 +920,9 @@ Bool process_command_line( int argc, char *argv[] )
 	case 'f':
 	  strncpy( gcmd_line.fct_file_name, *argv, MAX_LENGTH );
 	  break;
+  case 'q':
+	  strncpy( gcmd_line.plan_file_name, *argv, MAX_LENGTH );
+	  break;    
 	case 'i':
 	  sscanf( *argv, "%d", &gcmd_line.display_info );
 	  break;

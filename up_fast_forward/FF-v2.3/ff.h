@@ -357,6 +357,7 @@ struct _command_line {
   char path[MAX_LENGTH];
   char ops_file_name[MAX_LENGTH];
   char fct_file_name[MAX_LENGTH];
+  char plan_file_name[MAX_LENGTH];
   int display_info;
   int debug;
 

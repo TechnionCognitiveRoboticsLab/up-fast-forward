@@ -37,7 +37,7 @@ class FastForwardPDDLPlanner(PDDLPlanner):
         ff_binary = pkg_resources.resource_filename(
             __name__, "FF-v2.3/ff"
         )        
-        cmd += [ff_binary, "-o", domain_filename, "-f", problem_filename]        
+        cmd = [ff_binary, "-o", domain_filename, "-f", problem_filename, "-q", plan_filename]        
         return cmd
     
     def _result_status(
@@ -64,12 +64,6 @@ class FastForwardPDDLPlanner(PDDLPlanner):
         ]
         c.long_description = " ".join(details)
         return c
-
-    def _starting_plan_str(self) -> str:
-        return "ff: found legal plan as follows"
-
-    def _ending_plan_str(self) -> str:
-        return "time spent:"
 
     def _parse_plan_line(self, plan_line: str) -> str:
         if plan_line.startswith("[t="):
@@ -104,59 +98,10 @@ class FastForwardPDDLPlanner(PDDLPlanner):
 
     @staticmethod
     def supports(problem_kind: "ProblemKind") -> bool:
-        return problem_kind <= FastDownwardPDDLPlanner.supported_kind()
+        return problem_kind <= FastForwardPDDLPlanner.supported_kind()
 
     @staticmethod
     def ensures(anytime_guarantee: up.engines.AnytimeGuarantee) -> bool:
         if anytime_guarantee == up.engines.AnytimeGuarantee.INCREASING_QUALITY:
             return True
         return False
-
-
-class FastDownwardOptimalPDDLPlanner(FastDownwardMixin, PDDLPlanner):
-    def __init__(self, log_level: str = "info"):
-        PDDLPlanner.__init__(self)
-        FastDownwardMixin.__init__(
-            self, fast_forward_search_config="astar(lmcut())", log_level=log_level
-        )
-        self._guarantee_no_plan_found = ResultStatus.UNSOLVABLE_PROVEN
-        self._guarantee_metrics_task = ResultStatus.SOLVED_OPTIMALLY
-
-    @property
-    def name(self) -> str:
-        return "Fast Downward (with optimality guarantee)"
-
-    @staticmethod
-    def get_credits(**kwargs) -> Optional["Credits"]:
-        c = Credits(**credits)
-        details = [
-            c.long_description,
-            "The optimal engine uses the LM-Cut heuristic by",
-            "Malte Helmert and Carmel Domshlak.",
-        ]
-        c.long_description = " ".join(details)
-        return c
-
-    @staticmethod
-    def supported_kind() -> "ProblemKind":
-        supported_kind = ProblemKind()
-        supported_kind.set_problem_class("ACTION_BASED")
-        supported_kind.set_typing("FLAT_TYPING")
-        supported_kind.set_typing("HIERARCHICAL_TYPING")
-        supported_kind.set_conditions_kind("NEGATIVE_CONDITIONS")
-        supported_kind.set_conditions_kind("DISJUNCTIVE_CONDITIONS")
-        supported_kind.set_conditions_kind("EXISTENTIAL_CONDITIONS")
-        supported_kind.set_conditions_kind("UNIVERSAL_CONDITIONS")
-        supported_kind.set_conditions_kind("EQUALITIES")
-        supported_kind.set_quality_metrics("ACTIONS_COST")
-        supported_kind.set_actions_cost_kind("STATIC_FLUENTS_IN_ACTIONS_COST")
-        supported_kind.set_quality_metrics("PLAN_LENGTH")
-        return supported_kind
-
-    @staticmethod
-    def supports(problem_kind: "ProblemKind") -> bool:
-        return problem_kind <= FastDownwardOptimalPDDLPlanner.supported_kind()
-
-    @staticmethod
-    def satisfies(optimality_guarantee: OptimalityGuarantee) -> bool:
-        return True
